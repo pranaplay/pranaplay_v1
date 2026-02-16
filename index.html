@@ -19,7 +19,8 @@
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
+   <script type="text/babel">
+    window.addEventListener('DOMContentLoaded', () => {
         const { useState, useEffect, useMemo } = React;
             { min: 0, max: 150, name: "Seed", emoji: "🌱", color: "text-green-600" },
             { min: 151, max: 400, name: "Sprout", emoji: "🌿", color: "text-emerald-500" },
@@ -203,6 +204,7 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-    </script>
+    });
+</script>
 </body>
 </html>
