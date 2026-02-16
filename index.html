@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -11,22 +11,99 @@
     <style>
         body { background-color: #FFDDD2; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         .app-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); border-radius: 2.5rem; border: 1px solid rgba(255,255,255,0.5); }
-        .progress-bar { transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
-        /* Entfernt Scrollbars für ein App-Gefühl */
+        .progress-bar { transition: width 0.5s ease-out; }
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-   <script type="text/babel">
-    window.addEventListener('DOMContentLoaded', () => {
-        const { useState, useEffect, useMemo } = React;
+    <script type="text/babel">
+        const ASANA_DATA = [
+            { "id": 1, "level": "Seed", "sanskrit": "Tadasana", "english": "Mountain Pose", "benefits": "Improves posture, strengthens thighs, knees, and ankles." },
+            { "id": 2, "level": "Seed", "sanskrit": "Vrikshasana", "english": "Tree Pose", "benefits": "Improves balance and strengthens the legs and spine." },
+            { "id": 3, "level": "Seed", "sanskrit": "Adho Mukha Svanasana", "english": "Downward-Facing Dog", "benefits": "Energizes the body, stretches shoulders, hamstrings, and calves." },
+            { "id": 4, "level": "Seed", "sanskrit": "Trikonasana", "english": "Triangle Pose", "benefits": "Stretches and strengthens the entire body, improves digestion." },
+            { "id": 5, "level": "Seed", "sanskrit": "Virabhadrasana I", "english": "Warrior I", "benefits": "Strengthens shoulders, arms, and back muscles." },
+            { "id": 6, "level": "Seed", "sanskrit": "Virabhadrasana II", "english": "Warrior II", "benefits": "Strengthens and stretches the legs and ankles." },
+            { "id": 7, "level": "Seed", "sanskrit": "Virabhadrasana III", "english": "Warrior III", "benefits": "Strengthens the whole back side of the body and improves balance." },
+            { "id": 8, "level": "Seed", "sanskrit": "Balasana", "english": "Child's Pose", "benefits": "Gently stretches the hips, thighs, and ankles; calms the mind." },
+            { "id": 9, "level": "Seed", "sanskrit": "Bhujangasana", "english": "Cobra Pose", "benefits": "Strengthens the spine, stretches chest and shoulders." },
+            { "id": 10, "level": "Seed", "sanskrit": "Marjaryasana", "english": "Cat Pose", "benefits": "Provides a gentle massage to the spine and belly organs." },
+            { "id": 11, "level": "Seed", "sanskrit": "Bitilasana", "english": "Cow Pose", "benefits": "Warms up the spine and relieves tension in the back." },
+            { "id": 12, "level": "Seed", "sanskrit": "Adho Mukha Virasana", "english": "Downward-Facing Hero Pose", "benefits": "Stretches the hips and groin, calms the brain." },
+            { "id": 13, "level": "Seed", "sanskrit": "Uttanasana", "english": "Standing Forward Bend", "benefits": "Calms the brain and helps relieve stress and mild depression." },
+            { "id": 14, "level": "Seed", "sanskrit": "Setu Bandhasana", "english": "Bridge Pose", "benefits": "Stretches the chest, neck, and spine; calms the brain." },
+            { "id": 15, "level": "Seed", "sanskrit": "Sukhasana", "english": "Easy Pose", "benefits": "Promotes inner calm and strengthens the back." },
+            { "id": 16, "level": "Sprout", "sanskrit": "Phalakasana", "english": "Plank Pose", "benefits": "Strengthens the core, arms, and wrists." },
+            { "id": 17, "level": "Sprout", "sanskrit": "Chaturanga Dandasana", "english": "Four-Limbed Staff Pose", "benefits": "Tones the arms and abdominal muscles." },
+            { "id": 18, "level": "Sprout", "sanskrit": "Urdhva Mukha Svanasana", "english": "Upward-Facing Dog", "benefits": "Improves posture and stretches the chest and lungs." },
+            { "id": 19, "level": "Sprout", "sanskrit": "Anjaneyasana", "english": "Low Lunge", "benefits": "Stretches the hamstrings, groins, and psoas." },
+            { "id": 20, "level": "Sprout", "sanskrit": "Utkatasana", "english": "Chair Pose", "benefits": "Tones the leg muscles, strengthens hip flexors and back." },
+            { "id": 21, "level": "Sprout", "sanskrit": "Parsvottanasana", "english": "Pyramid Pose", "benefits": "Calms the brain and stretches the spine and shoulders." },
+            { "id": 22, "level": "Sprout", "sanskrit": "Prasarita Padottanasana", "english": "Wide-Legged Forward Bend", "benefits": "Strengthens and stretches the inner and back legs." },
+            { "id": 23, "level": "Sprout", "sanskrit": "Garudasana", "english": "Eagle Pose", "benefits": "Improves balance and stretches the upper back and shoulders." },
+            { "id": 24, "level": "Sprout", "sanskrit": "Utthita Parsvakonasana", "english": "Extended Side Angle Pose", "benefits": "Strengthens and stretches the legs, knees, and ankles." },
+            { "id": 25, "level": "Sprout", "sanskrit": "Parivrtta Trikonasana", "english": "Revolved Triangle Pose", "benefits": "Improves balance and stretches the hips and spine." },
+            { "id": 26, "level": "Sprout", "sanskrit": "Ardha Chandrasana", "english": "Half Moon Pose", "benefits": "Improves coordination and sense of balance." },
+            { "id": 27, "level": "Sprout", "sanskrit": "Salabhasana", "english": "Locust Pose", "benefits": "Strengthens the muscles of the spine and buttocks." },
+            { "id": 28, "level": "Sprout", "sanskrit": "Dhanurasana", "english": "Bow Pose", "benefits": "Stretches the entire front of the body and strengthens back muscles." },
+            { "id": 29, "level": "Sprout", "sanskrit": "Ustrasana", "english": "Camel Pose", "benefits": "Stretches the entire front of the body, including the throat." },
+            { "id": 30, "level": "Sprout", "sanskrit": "Janu Sirsasana", "english": "Head-to-Knee Forward Bend", "benefits": "Calms the brain and stretches the spine and hamstrings." },
+            { "id": 31, "level": "Sprout", "sanskrit": "Paschimottanasana", "english": "Seated Forward Bend", "benefits": "Stretches the spine, shoulders, and hamstrings." },
+            { "id": 32, "level": "Sprout", "sanskrit": "Baddha Konasana", "english": "Bound Angle Pose", "benefits": "Stimulates abdominal organs and stretches the inner thighs." },
+            { "id": 33, "level": "Sprout", "sanskrit": "Upavistha Konasana", "english": "Wide-Angle Seated Forward Bend", "benefits": "Stretches the insides and backs of the legs." },
+            { "id": 34, "level": "Sprout", "sanskrit": "Navasana", "english": "Boat Pose", "benefits": "Strengthens the abdomen, hip flexors, and spine." },
+            { "id": 35, "level": "Sprout", "sanskrit": "Malasana", "english": "Yogi Squat", "benefits": "Stretches the ankles, groins, and back torso." },
+            { "id": 36, "level": "Bloom", "sanskrit": "Kumbhakasana", "english": "Plank Pose Variation", "benefits": "Develops core stability and arm strength." },
+            { "id": 37, "level": "Bloom", "sanskrit": "Vasisthasana", "english": "Side Plank Pose", "benefits": "Strengthens the arms, belly, and legs." },
+            { "id": 38, "level": "Bloom", "sanskrit": "Purvottanasana", "english": "Upward Plank Pose", "benefits": "Strengthens the wrists, arms, and glutes." },
+            { "id": 39, "level": "Bloom", "sanskrit": "Eka Pada Rajakapotasana", "english": "Pigeon Pose", "benefits": "Deeply stretches the hip rotators and flexors." },
+            { "id": 40, "level": "Bloom", "sanskrit": "Gomukhasana", "english": "Cow Face Pose", "benefits": "Stretches the ankles, hips, thighs, and shoulders." },
+            { "id": 41, "level": "Bloom", "sanskrit": "Virasana", "english": "Hero Pose", "benefits": "Stretches the thighs, knees, and ankles." },
+            { "id": 42, "level": "Bloom", "sanskrit": "Matsyasana", "english": "Fish Pose", "benefits": "Stretches the deep hip flexors and intercostal muscles." },
+            { "id": 43, "level": "Bloom", "sanskrit": "Urdhva Dhanurasana", "english": "Wheel Pose", "benefits": "Strengthens arms, wrists, abdomen, and spine." },
+            { "id": 44, "level": "Bloom", "sanskrit": "Salamba Sarvangasana", "english": "Shoulder Stand", "benefits": "Calms the brain and helps relieve stress." },
+            { "id": 45, "level": "Bloom", "sanskrit": "Halasana", "english": "Plow Pose", "benefits": "Calms the brain and stretches the shoulders and spine." },
+            { "id": 46, "level": "Bloom", "sanskrit": "Karnapidasana", "english": "Ear-Pressure Pose", "benefits": "Stretches the spine and calms the mind." },
+            { "id": 47, "level": "Bloom", "sanskrit": "Viparita Karani", "english": "Legs-Up-the-Wall Pose", "benefits": "Relieves tired or cramped legs and feet." },
+            { "id": 48, "level": "Bloom", "sanskrit": "Ardha Matsyendrasana", "english": "Half Lord of the Fishes Pose", "benefits": "Stimulates the liver and kidneys, stretches the shoulders." },
+            { "id": 49, "level": "Bloom", "sanskrit": "Bharadvajasana I", "english": "Bharadvaja's Twist", "benefits": "Stretches the spine, shoulders, and hips." },
+            { "id": 50, "level": "Bloom", "sanskrit": "Marichyasana III", "english": "Marichi's Pose", "benefits": "Massages abdominal organs including the liver and kidneys." },
+            { "id": 51, "level": "Bloom", "sanskrit": "Padmasana", "english": "Lotus Pose", "benefits": "Calms the brain and stimulates the pelvis and spine." },
+            { "id": 52, "level": "Bloom", "sanskrit": "Savasana", "english": "Corpse Pose", "benefits": "Relaxes the whole body and helps lower blood pressure." },
+            { "id": 53, "level": "Bloom", "sanskrit": "Ananda Balasana", "english": "Happy Baby Pose", "benefits": "Gently stretches the inner groins and the back spine." },
+            { "id": 54, "level": "Bloom", "sanskrit": "Supta Virasana", "english": "Reclining Hero Pose", "benefits": "Stretches the abdomen, thighs, and deep hip flexors." },
+            { "id": 55, "level": "Bloom", "sanskrit": "Supta Baddha Konasana", "english": "Reclining Bound Angle Pose", "benefits": "Stimulates heart and improves general circulation." },
+            { "id": 56, "level": "Yogi", "sanskrit": "Bakasana", "english": "Crow Pose", "benefits": "Strengthens wrists, arms, and abdominal muscles." },
+            { "id": 57, "level": "Yogi", "sanskrit": "Parsva Bakasana", "english": "Side Crow Pose", "benefits": "Strengthens the arms and wrists, tones the core." },
+            { "id": 58, "level": "Yogi", "sanskrit": "Astavakrasana", "english": "Eight-Angle Pose", "benefits": "Strengthens the wrists and arms, tones the abdominal muscles." },
+            { "id": 59, "level": "Yogi", "sanskrit": "Eka Pada Koundinyasana II", "english": "One-Legged Arm Balance", "benefits": "Strengthens the arms and wrists, tones the belly." },
+            { "id": 60, "level": "Yogi", "sanskrit": "Pincha Mayurasana", "english": "Forearm Stand", "benefits": "Strengthens the shoulders, arms, and back." },
+            { "id": 61, "level": "Yogi", "sanskrit": "Adho Mukha Vrksasana", "english": "Handstand", "benefits": "Strengthens shoulders, arms, and wrists." },
+            { "id": 62, "level": "Yogi", "sanskrit": "Salamba Sirsasana", "english": "Headstand", "benefits": "Calms the brain and strengthens the core and arms." },
+            { "id": 63, "level": "Yogi", "sanskrit": "Kapotasana", "english": "Pigeon Pose (Advanced)", "benefits": "Deeply stretches the entire front of the body." },
+            { "id": 64, "level": "Yogi", "sanskrit": "Hanumanasana", "english": "Monkey Pose (Splits)", "benefits": "Stretches the hamstrings and groins deeply." },
+            { "id": 65, "level": "Yogi", "sanskrit": "Natarajasana", "english": "Dancer's Pose", "benefits": "Improves balance and stretches the shoulders and chest." },
+            { "id": 66, "level": "Yogi", "sanskrit": "Mayurasana", "english": "Peacock Pose", "benefits": "Strengthens the forearms, wrists, and elbows." },
+            { "id": 67, "level": "Yogi", "sanskrit": "Padangusthasana", "english": "Big Toe Pose", "benefits": "Calms the brain and stretches the hamstrings." },
+            { "id": 68, "level": "Yogi", "sanskrit": "Kurmasana", "english": "Tortoise Pose", "benefits": "Deeply stretches the back and hamstrings." },
+            { "id": 69, "level": "Yogi", "sanskrit": "Eka Pada Sirsasana", "english": "Foot-behind-the-Head Pose", "benefits": "Opens the hips deeply and stretches the spine." },
+            { "id": 70, "level": "Yogi", "sanskrit": "Titibasana", "english": "Firefly Pose", "benefits": "Strengthens the arms and wrists, tones the core." },
+            { "id": 71, "level": "Yogi", "sanskrit": "Yoganidrasana", "english": "Yoga Sleep Pose", "benefits": "Provides a deep stretch to the spine and hips." },
+            { "id": 72, "level": "Yogi", "sanskrit": "Sirsasana II", "english": "Tripod Headstand", "benefits": "Strengthens the core and builds upper body power." },
+            { "id": 73, "level": "Yogi", "sanskrit": "Urdhva Kukkutasana", "english": "Upward Cock Pose", "benefits": "Develops intense arm strength and balance." },
+            { "id": 74, "level": "Yogi", "sanskrit": "Sarvangasana", "english": "Full Shoulder Stand", "benefits": "Stimulates the thyroid and prostate glands." }
+        ];
+
+        const LEVELS = [
             { min: 0, max: 150, name: "Seed", emoji: "🌱", color: "text-green-600" },
             { min: 151, max: 400, name: "Sprout", emoji: "🌿", color: "text-emerald-500" },
             { min: 401, max: 800, name: "Bloom", emoji: "🌸", color: "text-rose-400" },
             { min: 801, max: Infinity, name: "Yogi", emoji: "🏆", color: "text-amber-500" }
         ];
+
+        const { useState, useEffect, useMemo } = React;
 
         const App = () => {
             const [screen, setScreen] = useState('start');
@@ -46,18 +123,16 @@
             }, [score]);
 
             const generateQuestion = () => {
-                const currentLevelName = levelInfo.name;
                 const unlockedLevels = LEVELS.slice(0, LEVELS.indexOf(levelInfo) + 1).map(l => l.name);
-               
                 const pool = ASANA_DATA.filter(p => unlockedLevels.includes(p.level));
                 const pose = pool[Math.floor(Math.random() * pool.length)];
-               
+                
                 const type = Math.random() > 0.5 ? 'S_TO_E' : 'E_TO_S';
                 const distractors = ASANA_DATA
                     .filter(p => p.id !== pose.id)
                     .sort(() => 0.5 - Math.random())
                     .slice(0, 3);
-               
+                
                 const options = [...distractors, pose].sort(() => 0.5 - Math.random());
 
                 setCurrentQuestion({
@@ -74,7 +149,7 @@
                 const correct = answer === currentQuestion.correctAnswer;
                 setSelectedAnswer(answer);
                 setIsCorrect(correct);
-               
+                
                 if (correct) {
                     const newScore = score + 10;
                     setScore(newScore);
@@ -94,7 +169,7 @@
             return (
                 <div className="min-h-screen p-4 flex flex-col items-center justify-center">
                     <div className="max-w-md w-full app-card shadow-2xl overflow-hidden min-h-[600px] flex flex-col">
-                       
+                        
                         {/* Header */}
                         <div className="pt-8 px-8 flex justify-between items-center">
                             <div className="flex flex-col">
@@ -109,11 +184,11 @@
 
                         <div className="p-8 flex-1 flex flex-col">
                             {screen === 'start' && (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95">
+                                <div className="flex-1 flex flex-col items-center justify-center text-center">
                                     <div className="w-40 h-40 bg-[#FFDDD2] rounded-full flex items-center justify-center mb-8 shadow-inner text-6xl">🧘</div>
                                     <h2 className="text-2xl font-bold text-gray-700 mb-4">Ready to Flow?</h2>
                                     <p className="text-gray-500 text-sm mb-8">Master 74 Asanas. <br/>Sanskrit ↔ English</p>
-                                    <button
+                                    <button 
                                         onClick={() => { setScore(0); generateQuestion(); setScreen('quiz'); }}
                                         className="w-full bg-[#E29578] text-white font-bold py-5 rounded-[2rem] shadow-lg active:scale-95 transition-transform"
                                     >
@@ -123,7 +198,7 @@
                             )}
 
                             {screen === 'quiz' && currentQuestion && (
-                                <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-right-4">
+                                <div className="flex-1 flex flex-col">
                                     <div className="bg-[#FFDDD2]/40 p-8 rounded-[2.5rem] text-center border border-[#E29578]/20 mb-8 shadow-inner">
                                         <p className="text-[10px] uppercase font-bold text-[#E29578]/60 tracking-[0.2em] mb-3">
                                             {currentQuestion.type === 'S_TO_E' ? 'Translate to English' : 'Translate to Sanskrit'}
@@ -138,7 +213,7 @@
                                             const val = currentQuestion.type === 'E_TO_S' ? opt.sanskrit : opt.english;
                                             const isSelected = selectedAnswer === val;
                                             const isCorrectChoice = val === currentQuestion.correctAnswer;
-                                           
+                                            
                                             let style = "p-5 rounded-2xl border-2 text-left font-medium transition-all shadow-sm ";
                                             if (!selectedAnswer) style += "border-white bg-white/50 text-gray-700 active:bg-[#E29578] active:text-white";
                                             else if (isCorrectChoice) style += "border-green-500 bg-green-50 text-green-700";
@@ -156,7 +231,7 @@
                             )}
 
                             {screen === 'resolution' && (
-                                <div className="flex-1 flex flex-col animate-in fade-in zoom-in-95">
+                                <div className="flex-1 flex flex-col">
                                     <div className={`text-center p-8 rounded-[2.5rem] mb-6 shadow-sm ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                         <div className="text-4xl mb-2">{isCorrect ? '✨' : '☁️'}</div>
                                         <h2 className="text-2xl font-bold">{isCorrect ? 'Correct!' : 'Keep Learning'}</h2>
@@ -170,7 +245,7 @@
                                         <p className="text-sm text-gray-600 leading-relaxed">{currentQuestion.pose.benefits}</p>
                                     </div>
 
-                                    <button
+                                    <button 
                                         onClick={nextQuestion}
                                         className="w-full bg-[#E29578] text-white font-bold py-5 rounded-[2rem] shadow-lg mt-auto"
                                     >
@@ -189,9 +264,9 @@
                                         <span>Level: {levelInfo.name}</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-[#FFB703] progress-bar"
-                                            style={{ width: `${Math.min(100, (score % 200) / 2)}%` }}
+                                        <div 
+                                            className="h-full bg-[#FFB703] progress-bar" 
+                                            style={{ width: `${Math.min(100, (score / 800) * 100)}%` }}
                                         ></div>
                                     </div>
                                 </div>
@@ -204,7 +279,6 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-    });
-</script>
+    </script>
 </body>
 </html>
