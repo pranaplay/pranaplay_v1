@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PranaPlay</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #FFDDD2; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .app-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); border-radius: 2.5rem; border: 1px solid rgba(255,255,255,0.5); }
+        .progress-bar { transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* Entfernt Scrollbars für ein App-Gefühl */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+            { min: 0, max: 150, name: "Seed", emoji: "🌱", color: "text-green-600" },
+            { min: 151, max: 400, name: "Sprout", emoji: "🌿", color: "text-emerald-500" },
+            { min: 401, max: 800, name: "Bloom", emoji: "🌸", color: "text-rose-400" },
+            { min: 801, max: Infinity, name: "Yogi", emoji: "🏆", color: "text-amber-500" }
+        ];
+
+        const App = () => {
+            const [screen, setScreen] = useState('start');
+            const [score, setScore] = useState(0);
+            const [highScore, setHighScore] = useState(0);
+            const [currentQuestion, setCurrentQuestion] = useState(null);
+            const [selectedAnswer, setSelectedAnswer] = useState(null);
+            const [isCorrect, setIsCorrect] = useState(false);
+
+            useEffect(() => {
+                const saved = localStorage.getItem('pranaplay_highscore');
+                if (saved) setHighScore(parseInt(saved));
+            }, []);
+
+            const levelInfo = useMemo(() => {
+                return LEVELS.find(l => score >= l.min && score <= l.max) || LEVELS[0];
+            }, [score]);
+
+            const generateQuestion = () => {
+                const currentLevelName = levelInfo.name;
+                const unlockedLevels = LEVELS.slice(0, LEVELS.indexOf(levelInfo) + 1).map(l => l.name);
+               
+                const pool = ASANA_DATA.filter(p => unlockedLevels.includes(p.level));
+                const pose = pool[Math.floor(Math.random() * pool.length)];
+               
+                const type = Math.random() > 0.5 ? 'S_TO_E' : 'E_TO_S';
+                const distractors = ASANA_DATA
+                    .filter(p => p.id !== pose.id)
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 3);
+               
+                const options = [...distractors, pose].sort(() => 0.5 - Math.random());
+
+                setCurrentQuestion({
+                    pose,
+                    type,
+                    options,
+                    correctAnswer: type === 'E_TO_S' ? pose.sanskrit : pose.english
+                });
+                setSelectedAnswer(null);
+            };
+
+            const handleAnswer = (answer) => {
+                if (selectedAnswer) return;
+                const correct = answer === currentQuestion.correctAnswer;
+                setSelectedAnswer(answer);
+                setIsCorrect(correct);
+               
+                if (correct) {
+                    const newScore = score + 10;
+                    setScore(newScore);
+                    if (newScore > highScore) {
+                        setHighScore(newScore);
+                        localStorage.setItem('pranaplay_highscore', newScore.toString());
+                    }
+                }
+                setTimeout(() => setScreen('resolution'), 800);
+            };
+
+            const nextQuestion = () => {
+                generateQuestion();
+                setScreen('quiz');
+            };
+
+            return (
+                <div className="min-h-screen p-4 flex flex-col items-center justify-center">
+                    <div className="max-w-md w-full app-card shadow-2xl overflow-hidden min-h-[600px] flex flex-col">
+                       
+                        {/* Header */}
+                        <div className="pt-8 px-8 flex justify-between items-center">
+                            <div className="flex flex-col">
+                                <h1 className="text-3xl font-bold text-[#E29578]">PranaPlay</h1>
+                                <p className="text-[#E29578]/50 text-[10px] font-bold tracking-widest uppercase">Linguistic Yoga</p>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-[#FFB703] font-bold text-lg">🏆 {highScore}</div>
+                                <div className={`${levelInfo.color} text-xs font-bold uppercase tracking-tighter`}>{levelInfo.emoji} {levelInfo.name}</div>
+                            </div>
+                        </div>
+
+                        <div className="p-8 flex-1 flex flex-col">
+                            {screen === 'start' && (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95">
+                                    <div className="w-40 h-40 bg-[#FFDDD2] rounded-full flex items-center justify-center mb-8 shadow-inner text-6xl">🧘</div>
+                                    <h2 className="text-2xl font-bold text-gray-700 mb-4">Ready to Flow?</h2>
+                                    <p className="text-gray-500 text-sm mb-8">Master 74 Asanas. <br/>Sanskrit ↔ English</p>
+                                    <button
+                                        onClick={() => { setScore(0); generateQuestion(); setScreen('quiz'); }}
+                                        className="w-full bg-[#E29578] text-white font-bold py-5 rounded-[2rem] shadow-lg active:scale-95 transition-transform"
+                                    >
+                                        Begin Practice
+                                    </button>
+                                </div>
+                            )}
+
+                            {screen === 'quiz' && currentQuestion && (
+                                <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-right-4">
+                                    <div className="bg-[#FFDDD2]/40 p-8 rounded-[2.5rem] text-center border border-[#E29578]/20 mb-8 shadow-inner">
+                                        <p className="text-[10px] uppercase font-bold text-[#E29578]/60 tracking-[0.2em] mb-3">
+                                            {currentQuestion.type === 'S_TO_E' ? 'Translate to English' : 'Translate to Sanskrit'}
+                                        </p>
+                                        <h3 className="text-3xl font-bold text-[#E29578] leading-tight">
+                                            {currentQuestion.type === 'S_TO_E' ? currentQuestion.pose.sanskrit : currentQuestion.pose.english}
+                                        </h3>
+                                    </div>
+
+                                    <div className="grid gap-3 mt-auto">
+                                        {currentQuestion.options.map((opt, i) => {
+                                            const val = currentQuestion.type === 'E_TO_S' ? opt.sanskrit : opt.english;
+                                            const isSelected = selectedAnswer === val;
+                                            const isCorrectChoice = val === currentQuestion.correctAnswer;
+                                           
+                                            let style = "p-5 rounded-2xl border-2 text-left font-medium transition-all shadow-sm ";
+                                            if (!selectedAnswer) style += "border-white bg-white/50 text-gray-700 active:bg-[#E29578] active:text-white";
+                                            else if (isCorrectChoice) style += "border-green-500 bg-green-50 text-green-700";
+                                            else if (isSelected) style += "border-red-500 bg-red-50 text-red-700";
+                                            else style += "border-transparent opacity-40";
+
+                                            return (
+                                                <button key={i} onClick={() => handleAnswer(val)} disabled={!!selectedAnswer} className={style}>
+                                                    {val}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {screen === 'resolution' && (
+                                <div className="flex-1 flex flex-col animate-in fade-in zoom-in-95">
+                                    <div className={`text-center p-8 rounded-[2.5rem] mb-6 shadow-sm ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        <div className="text-4xl mb-2">{isCorrect ? '✨' : '☁️'}</div>
+                                        <h2 className="text-2xl font-bold">{isCorrect ? 'Correct!' : 'Keep Learning'}</h2>
+                                        <p className="font-bold opacity-80">+{isCorrect ? 10 : 0} Points</p>
+                                    </div>
+
+                                    <div className="bg-white/60 p-8 rounded-[2rem] border border-white mb-8">
+                                        <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Pose Breakdown</p>
+                                        <h4 className="text-xl font-bold text-gray-800">{currentQuestion.pose.sanskrit}</h4>
+                                        <p className="italic text-[#E29578] font-semibold mb-4">{currentQuestion.pose.english}</p>
+                                        <p className="text-sm text-gray-600 leading-relaxed">{currentQuestion.pose.benefits}</p>
+                                    </div>
+
+                                    <button
+                                        onClick={nextQuestion}
+                                        className="w-full bg-[#E29578] text-white font-bold py-5 rounded-[2rem] shadow-lg mt-auto"
+                                    >
+                                        Continue Flow
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Progress Tracker */}
+                        {screen !== 'start' && (
+                            <div className="px-8 pb-8">
+                                <div className="bg-white/40 rounded-2xl p-4 border border-white/50">
+                                    <div className="flex justify-between text-[9px] font-bold uppercase text-gray-400 mb-2">
+                                        <span>Current Score: {score}</span>
+                                        <span>Level: {levelInfo.name}</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-[#FFB703] progress-bar"
+                                            style={{ width: `${Math.min(100, (score % 200) / 2)}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
